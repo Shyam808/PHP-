@@ -1,42 +1,74 @@
 <?php
-$server = "localhost";
-$username = "root";
-$password = "";
-$dbname = "travel_form";
+$insert = false;
 
-$conn = mysqli_connect($server, $username, $password, $dbname);
+if (isset($_POST['name'])) {
 
-if (!$conn) {
-    die("Database connection failed");
-}
+    // Database connection
+    $server = "localhost";
+    $username = "root";
+    $password = "";
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $con = mysqli_connect($server, $username, $password);
 
-    $name   = isset($_POST['name'])   ? trim($_POST['name'])   : '';
-    $age    = isset($_POST['age'])    ? (int)$_POST['age']    : 0;
-    $gender = isset($_POST['gender']) ? trim($_POST['gender']) : '';
-    $email  = isset($_POST['email'])  ? trim($_POST['email'])  : '';
-    $number = isset($_POST['number']) ? trim($_POST['number']) : '';
-    $other  = isset($_POST['other'])  ? trim($_POST['other'])  : '';
-
-    $sql = "INSERT INTO users (`name`, `age`, `gender`, `email`, `number`, `other`)
-            VALUES (?, ?, ?, ?, ?, ?)";
-
-    $stmt = mysqli_prepare($conn, $sql);
-    if ($stmt) {
-        mysqli_stmt_bind_param($stmt, "sissss", $name, $age, $gender, $email, $number, $other);
-        if (mysqli_stmt_execute($stmt)) {
-            echo "<h2 style='text-align:center;color:green;margin-top:50px;'>
-                  Form Submitted Successfully!
-                  </h2>";
-        } else {
-            echo "Error executing statement: " . mysqli_stmt_error($stmt);
-        }
-        mysqli_stmt_close($stmt);
-    } else {
-        echo "Prepare failed: " . mysqli_error($conn);
+    if (!$con) {
+        die("Connection failed: " . mysqli_connect_error());
     }
 
-    mysqli_close($conn);
+    // Get form data
+    $name   = $_POST['name'];
+    $age    = $_POST['age'];
+    $gender = $_POST['gender'];
+    $email  = $_POST['email'];
+    $number  = $_POST['number'];
+    $other   = $_POST['other'];
+
+    // Insert query
+    $sql = "INSERT INTO `trip`.`trip`
+            (`name`, `age`, `gender`, `email`, `phone`, `other`, `dt`)
+            VALUES
+            ('$name', '$age', '$gender', '$email', '$number', '$other', current_timestamp());";
+
+    if ($con->query($sql) == true) {
+        $insert = true;
+    } else {
+        echo "ERROR: $sql <br> $con->error";
+    }
+
+    $con->close();
 }
 ?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>IIT Kharagpur US Trip Form</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<img class="bg" src="bg.jpg" alt="IIT Kharagpur">
+
+<div class="container">
+    <h2>Welcome to IIT Kharagpur US Trip Form</h2>
+    <p>Fill the form to confirm your participation</p>
+    <?php
+    if ($insert == true) {
+        echo "<p class='success'>Thanks! Your form has been submitted successfully.</p>";
+    }
+    ?>
+
+    <form action="index.php" method="POST">
+        <input type="text" name="name" placeholder="Enter Name" required>
+        <input type="number" name="age" placeholder="Enter Age" required>
+        <input type="text" name="gender" placeholder="Enter Gender" required>
+        <input type="email" name="email" placeholder="Enter Email" required>
+        <input type="text" name="number" placeholder="Enter Mobile Number" required>
+        <textarea name="other" placeholder="Any other information"></textarea>
+
+        <button type="submit" class="btn">Submit</button>
+    </form>
+</div>
+
+</body>
+</html>
